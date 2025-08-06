@@ -98,7 +98,9 @@ go-add-env-and-path() {
   path_remove "$GOPATH/bin"
   prepend_path "$GOROOT/bin"
   prepend_path "$GOPATH/bin"
-  go env -w GOPATH=$GOPATH GOROOT=$GOROOT
+  if [[ $(command_exists go) == true ]]; then
+    go env -w GOPATH=$GOPATH GOROOT=$GOROOT
+  fi
 }
 
 go-arm64() {
@@ -116,18 +118,16 @@ go-amd64() {
 }
 
 # Mac 默认用 go-arm64
-if [[ $(command_exists go) == true ]]; then
-  if [[ $(uname -s) == "Darwin" ]]; then
-    go-arm64
-  fi
+if [[ $(uname -s) == "Darwin" ]]; then
+  go-arm64
+fi
 
-  # 如果是 Linux，那么就使用 go-amd64
-  if [[ $(uname -s) == "Linux" ]]; then
-    if [[ $(uname -m) == "arm64" ]]; then
-      go-arm64
-    else
-      go-amd64
-    fi
+# 如果是 Linux，那么就使用 go-amd64
+if [[ $(uname -s) == "Linux" ]]; then
+  if [[ $(uname -m) == "arm64" ]]; then
+    go-arm64
+  else
+    go-amd64
   fi
 fi
 # Go END
