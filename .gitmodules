@@ -1,0 +1,18 @@
+[submodule "plugins/zsh-async"]
+	path = plugins/zsh-async
+	url = git@github.com:mafredri/zsh-async.git
+[submodule "plugins/enhancd"]
+	path = plugins/enhancd
+	url = git@github.com:babarot/enhancd.git
+[submodule "plugins/zsh-syntax-highlighting"]
+	path = plugins/zsh-syntax-highlighting
+	url = git@github.com:zsh-users/zsh-syntax-highlighting.git
+[submodule "plugins/zsh-autosuggestions"]
+	path = plugins/zsh-autosuggestions
+	url = git@github.com:zsh-users/zsh-autosuggestions.git
+[submodule "plugins/z"]
+	path = plugins/z
+	url = git@github.com:rupa/z.git
+[submodule "plugins/pure"]
+	path = plugins/pure
+	url = git@github.com:sindresorhus/pure.git
