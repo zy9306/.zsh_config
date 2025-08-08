@@ -48,8 +48,6 @@ export ENHANCD_AWK=awk
 if [[ $(command_exists fzf) == true ]]; then
   ENHANCD_FILTER=fzf:fzy:peco:non-existing-filter
   export ENHANCD_FILTER
-else
-  echo_red ".zshrc: fzf is not installed enhancd may not working"
 fi
 # enhancd END
 
