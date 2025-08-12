@@ -6,6 +6,8 @@ else
   touch ~/.my_env
 fi
 
+export XDG_CONFIG_HOME="$HOME/.config"
+
 # config LD_LIBRARY_PATH
 if [ -d /usr/local/lib ]; then
   APPEND_LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64"
