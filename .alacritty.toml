@@ -1,0 +1,97 @@
+# How to install themes:
+# preview: https://github.com/alacritty/alacritty-theme#color-schemes
+# mkdir -p ~/.config/alacritty/themes
+# git clone https://github.com/alacritty/alacritty-theme ~/.config/alacritty/themes
+
+# Config
+# rm -f $HOME/.alacritty.toml && ln -s $PWD/.alacritty.toml $HOME/.alacritty.toml
+
+
+general.import = ["/Users/zy/.config/alacritty/themes/themes/catppuccin_mocha.toml"]
+
+[font]
+size = 16.0
+
+[font.bold]
+family = "Iosevka Nerd Font"
+style = "Bold"
+
+[font.glyph_offset]
+x = 0
+y = 0
+
+[font.italic]
+family = "Iosevka Nerd Font"
+style = "Italic"
+
+[font.normal]
+family = "Iosevka Nerd Font"
+style = "Regular"
+
+[font.offset]
+x = 0
+y = 0
+
+[[keyboard.bindings]]
+chars = "\u001Bf"
+key = "F"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Bb"
+key = "B"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Bd"
+key = "D"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Bk"
+key = "K"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Bj"
+key = "J"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001B1"
+key = "Key1"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001B2"
+key = "Key2"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001B3"
+key = "Key3"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001B4"
+key = "Key4"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001B5"
+key = "Key5"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001B\u007F"
+key = "Back"
+mods = "Alt"
+
+[[keyboard.bindings]]
+chars = "\u001B\u007F"
+key = "Back"
+mods = "Command"
+
+[[keyboard.bindings]]
+action = "ReceiveChar"
+key = "Back"
