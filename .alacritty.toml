@@ -95,3 +95,8 @@ mods = "Command"
 [[keyboard.bindings]]
 action = "ReceiveChar"
 key = "Back"
+
+[[keyboard.bindings]]
+action = "CreateNewWindow"
+key = "N"
+mods = "Control|Shift"
