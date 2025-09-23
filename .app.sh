@@ -31,6 +31,8 @@ fi
 # Extra PATHs
 append_path "$HOME/.local/bin"
 
+append_path "/usr/sbin"
+
 if [[ $(uname -s) == "Darwin" ]]; then
   export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib
 fi
@@ -53,7 +55,12 @@ fi
 # config python path for Mac
 if [[ $(uname -s) == 'Darwin' ]]; then
   for py_version in {"3.6","3.8","3.10","3.12","3.13"}; do
-    prepend_path "/Library/Frameworks/Python.framework/Versions/${py_version}/bin"
+	if [ -d "/Library/Frameworks/Python.framework/Versions/${py_version}/bin" ]; then
+		prepend_path "/Library/Frameworks/Python.framework/Versions/${py_version}/bin"
+	fi
+	if [ -d "/Users/zy/Library/Python/${py_version}/bin" ]; then
+		prepend_path "/Users/zy/Library/Python/${py_version}/bin"
+	fi
   done
 
   _gpython="/Library/Frameworks/Python.framework/Versions/${MAIN_PYTHON_VERSION}/bin/python"
