@@ -61,3 +61,12 @@ path_remove() {
   path=("${(@)path:#"$1"}")
 }
 
+alacritty_title() {
+  if [ $# -eq 0 ]; then
+    title=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+	echo "Setting alacritty title to '$title'"
+    echo -e "\e]2;$title"
+  else
+    echo -e "\e]2;$1"
+  fi
+}
