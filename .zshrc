@@ -51,9 +51,14 @@ if [[ $(command_exists fzf) == true ]]; then
 fi
 # enhancd END
 
-# make sure source .app at the end
-source $ZDOTDIR/.app.sh
-source $ZDOTDIR/.app_config.sh
+if [ -f ~/.my_env ]; then
+  source ~/.my_env
+else
+  touch ~/.my_env
+fi
+
+# make sure source .app_configs at the end
+source $ZDOTDIR/app_configs/load.sh
 
 if [[ "$HAS_STARSHIP" == true ]]; then
   export STARSHIP_CONFIG=~/.starship
