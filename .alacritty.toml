@@ -9,6 +9,9 @@
 
 general.import = ["/Users/zy/.config/alacritty/themes/themes/catppuccin_mocha.toml"]
 
+[window]
+option_as_alt = "OnlyLeft"
+
 [font]
 size = 16.0
 
