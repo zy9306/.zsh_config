@@ -5,6 +5,8 @@ export ZSH_PLUGINS_DIR="$HOME/.zsh_config/plugins"
 
 source $ZDOTDIR/.shutils.sh
 
+source $ZDOTDIR/app_configs/paths.sh
+
 export TERM=xterm-256color
 
 export LC_CTYPE="zh_CN.UTF-8"

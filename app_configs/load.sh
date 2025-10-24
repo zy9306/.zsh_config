@@ -1,6 +1,6 @@
 APP_CONFIGS_DIR=$ZDOTDIR/app_configs
 
-source $APP_CONFIGS_DIR/paths.sh
+# source $APP_CONFIGS_DIR/paths.sh
 
 source $APP_CONFIGS_DIR/python.sh
 source $APP_CONFIGS_DIR/go.sh
