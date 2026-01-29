@@ -20,3 +20,4 @@ source $APP_CONFIGS_DIR/tldr.sh
 source $APP_CONFIGS_DIR/proxychains4.sh
 source $APP_CONFIGS_DIR/editor.sh
 source $APP_CONFIGS_DIR/kubectl.sh
+source $APP_CONFIGS_DIR/alias.sh
