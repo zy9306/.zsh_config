@@ -53,10 +53,10 @@ if [[ $(command_exists fzf) == true ]]; then
 fi
 # enhancd END
 
-if [ -f $ZDOTDIR/.my_env ]; then
-  source $ZDOTDIR/.my_env
+if [ -f $HOME/.my_env ]; then
+  source $HOME/.my_env
 else
-  touch $ZDOTDIR/.my_env
+  touch $HOME/.my_env
 fi
 
 # make sure source .app_configs at the end
