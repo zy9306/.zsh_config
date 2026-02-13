@@ -24,6 +24,8 @@ append_path "/usr/sbin"
 
 append_path "/usr/local/mybin"
 
+append_path "$HOME/.local/mybin"
+
 if [[ $(uname -s) == "Darwin" ]]; then
   export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib
 fi
