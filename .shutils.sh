@@ -37,23 +37,23 @@ command_exists() {
 }
 
 prepend_path() {
-  APPEND_PATH=$1
-  if [ -d $APPEND_PATH ]; then
-    if [[ $PATH != *"$APPEND_PATH"* ]]; then
-      export PATH=$APPEND_PATH:$PATH
+  p=$1
+  if [ -d $p ]; then
+    if [[ $PATH != *"$p"* ]]; then
+      export PATH=$p:$PATH
     fi
   fi
-  unset APPEND_PATH
+  unset p
 }
 
 append_path() {
-  APPEND_PATH=$1
-  if [ -d $APPEND_PATH ]; then
-    if [[ $PATH != *"$APPEND_PATH"* ]]; then
-      export PATH=$PATH:$APPEND_PATH
+  p=$1
+  if [ -d $p ]; then
+    if [[ $PATH != *"$p"* ]]; then
+      export PATH=$PATH:$p
     fi
   fi
-  unset APPEND_PATH
+  unset p
 }
 
 path_remove() {
