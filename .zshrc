@@ -35,13 +35,17 @@ setopt HIST_BEEP
 
 source $ZSH_PLUGINS_DIR/zsh-async/async.zsh
 
+if [[ $(command_exists mise) == true ]]; then
+  eval "$(mise activate zsh)"
+else
+  echo_red "!!! mise is not installed"
+fi
+
 # pure theme
 if [[ $(command_exists starship) == false ]]; then
   fpath+=($ZSH_PLUGINS_DIR/pure)
   autoload -Uz promptinit && promptinit
   prompt -s pure
-else
-  HAS_STARSHIP=true
 fi
 
 # enhancd START
@@ -62,7 +66,7 @@ fi
 # make sure source .app_configs at the end
 source $ZDOTDIR/app_configs/load.sh
 
-if [[ "$HAS_STARSHIP" == true ]]; then
+if [[ $(command_exists starship) == true ]]; then
   export STARSHIP_CONFIG=~/.starship
   eval "$(starship init zsh)"
 else
