@@ -64,10 +64,10 @@ path_remove() {
 send_title() {
   if [ $# -eq 0 ]; then
     title=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
-	echo "Setting alacritty title to '$title'"
-    echo -e "\e]2;$title"
+	echo "Setting title to '$title'"
+    printf '\033]2;%s\007' "$title"
   else
-    echo -e "\e]2;$1"
+    printf '\033]2;%s\007' "$1"
   fi
 }
 
