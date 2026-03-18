@@ -1,5 +1,7 @@
 alias oc="opencode"
 
+alias fd='fd --hidden --follow --no-ignore-vcs'
+
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	command yazi "$@" --cwd-file="$tmp"
