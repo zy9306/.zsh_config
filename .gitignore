@@ -2,3 +2,4 @@ result
 .DS_Store
 .zcompdump
 .my_env
+.zsh_sessions/
