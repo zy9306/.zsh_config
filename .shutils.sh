@@ -262,3 +262,106 @@ lsbak() {
     printf '%s\n' "${matches[@]}"
   done
 }
+
+gw() {
+  emulate -L zsh
+
+  local branch_name repo_root common_dir original_root repo_name repo_parent dir_branch_name worktree_dir confirm line
+
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    cat <<'EOF'
+Usage: gw <branch_name>|.|-D|list|-h|--help
+
+  gw <branch_name>  Create or enter a worktree named <repo>-<branch_name>
+  gw .              Jump back to the original worktree
+  gw -D             Remove the current linked worktree after confirmation
+  gw list           List branch names for all worktrees
+  gw -h             Show this help
+  gw --help         Show this help
+EOF
+    return 0
+  fi
+
+  if [ $# -ne 1 ]; then
+    echo_red_bold "Usage: gw <branch_name>|.|-D|list|-h|--help"
+    return 1
+  fi
+
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+  common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+
+  if [ -z "$repo_root" ] || [ -z "$common_dir" ]; then
+    echo_red_bold "Not inside a git repository"
+    return 1
+  fi
+
+  original_root=$(dirname "$common_dir")
+
+  if [ "$1" = "." ]; then
+    cd "$original_root" || return 1
+    return 0
+  fi
+
+  if [ "$1" = "list" ]; then
+    git worktree list --porcelain | while IFS= read -r line; do
+      case "$line" in
+        'branch refs/heads/'*)
+          print -r -- "${line#branch refs/heads/}"
+          ;;
+        'branch '*)
+          if [ "${line#branch }" != "HEAD" ]; then
+            print -r -- "${line#branch }"
+          fi
+          ;;
+      esac
+    done
+    return 0
+  fi
+
+  if [ "$1" = "-D" ]; then
+    if [ "${repo_root:A}" = "${original_root:A}" ]; then
+      echo_red_bold "Current directory is the original worktree"
+      return 0
+    fi
+
+    printf 'Remove worktree %s? [y/N] ' "$repo_root"
+    read confirm
+
+    case "$confirm" in
+      y|Y|yes|YES)
+        cd "$original_root" || return 1
+        git worktree remove "$repo_root" || return 1
+        return 0
+        ;;
+      *)
+        echo_red_bold "Cancelled"
+        return 1
+        ;;
+    esac
+  fi
+
+  branch_name=$1
+
+  repo_name=$(basename "$repo_root")
+  repo_parent=$(dirname "$repo_root")
+  dir_branch_name=${branch_name//\//-}
+  worktree_dir="$repo_parent/${repo_name}-${dir_branch_name}"
+
+  if [ -e "$worktree_dir" ] && [ ! -d "$worktree_dir" ]; then
+    echo_red_bold "Path already exists and is not a directory: $worktree_dir"
+    return 1
+  fi
+
+  if [ -d "$worktree_dir" ]; then
+    cd "$worktree_dir" || return 1
+    return 0
+  fi
+
+  if git show-ref --verify --quiet "refs/heads/$branch_name" || git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+    git worktree add "$worktree_dir" "$branch_name" || return 1
+  else
+    git worktree add -b "$branch_name" "$worktree_dir" || return 1
+  fi
+
+  cd "$worktree_dir" || return 1
+}
