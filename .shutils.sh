@@ -263,6 +263,33 @@ lsbak() {
   done
 }
 
+_gw_link_shared_path() {
+  local source_path target_path
+
+  source_path=$1
+  target_path=$2
+
+  if [ ! -e "$source_path" ]; then
+    return 0
+  fi
+
+  if [ -e "$target_path" ] || [ -L "$target_path" ]; then
+    return 0
+  fi
+
+  ln -s "$source_path" "$target_path" || return 1
+}
+
+_gw_link_shared_files() {
+  local source_root target_root
+
+  source_root=$1
+  target_root=$2
+
+  _gw_link_shared_path "$source_root/.venv" "$target_root/.venv" || return 1
+  _gw_link_shared_path "$source_root/mise.toml" "$target_root/mise.toml" || return 1
+}
+
 gw() {
   emulate -L zsh
 
@@ -353,6 +380,7 @@ EOF
   fi
 
   if [ -d "$worktree_dir" ]; then
+    _gw_link_shared_files "$original_root" "$worktree_dir" || return 1
     cd "$worktree_dir" || return 1
     return 0
   fi
@@ -363,5 +391,6 @@ EOF
     git worktree add -b "$branch_name" "$worktree_dir" || return 1
   fi
 
+  _gw_link_shared_files "$original_root" "$worktree_dir" || return 1
   cd "$worktree_dir" || return 1
 }
