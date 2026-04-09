@@ -286,8 +286,11 @@ _gw_link_shared_files() {
   source_root=$1
   target_root=$2
 
+  _gw_link_shared_path "$source_root/ai_docs" "$target_root/ai_docs" || return 1
+  _gw_link_shared_path "$source_root/draft" "$target_root/draft" || return 1
   _gw_link_shared_path "$source_root/.venv" "$target_root/.venv" || return 1
   _gw_link_shared_path "$source_root/mise.toml" "$target_root/mise.toml" || return 1
+  _gw_link_shared_path "$source_root/AGENTS.md" "$target_root/AGENTS.md" || return 1
 }
 
 gw() {
