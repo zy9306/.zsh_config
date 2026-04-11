@@ -77,4 +77,9 @@ source $ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source $ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $ZSH_PLUGINS_DIR/z/z.sh
 
+if [[ $(command_exists rbenv) == true ]]; then
+  export PATH="$HOME/.rbenv/bin:$PATH"
+  eval "$(rbenv init - zsh)"
+fi
+
 bindkey -e
