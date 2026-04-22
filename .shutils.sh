@@ -82,6 +82,68 @@ tn() {
   fi
 }
 
+tsd() {
+  local confirm current_session
+
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    cat <<'EOF'
+Usage: tsd [--all]
+
+  Without arguments, delete the current tmux session.
+  --all     Delete all tmux sessions after confirmation.
+  -h        Show this help.
+  --help    Show this help.
+EOF
+    return 0
+  fi
+
+  if [ $# -gt 1 ]; then
+    echo_red_bold "Usage: tsd [--all]"
+    return 1
+  fi
+
+  if [ "$1" = "--all" ]; then
+    if ! tmux ls >/dev/null 2>&1; then
+      echo_red_bold "No tmux sessions found"
+      return 1
+    fi
+
+    printf 'Delete all tmux sessions? [y/N] '
+    read confirm
+
+    case "$confirm" in
+      y|Y|yes|YES)
+        tmux kill-server
+        ;;
+      *)
+        echo_red_bold "Cancelled"
+        return 1
+        ;;
+    esac
+
+    return $?
+  fi
+
+  if [ $# -ne 0 ]; then
+    echo_red_bold "Usage: tsd [--all]"
+    return 1
+  fi
+
+  if [ -z "$TMUX" ]; then
+    echo_red_bold "Not inside a tmux session"
+    return 1
+  fi
+
+  current_session=$(tmux display-message -p '#S' 2>/dev/null)
+
+  if [ -z "$current_session" ]; then
+    echo_red_bold "Failed to determine current tmux session"
+    return 1
+  fi
+
+  tmux kill-session -t "$current_session"
+}
+
 fh() {
   print -z $(([ -n "$ZSH_NAME" ] && fc -l 1 || history 0) | fzf +s --tac | sed 's/ *[0-9]* *//')
 }
