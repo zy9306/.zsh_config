@@ -27,33 +27,30 @@ echo_blue() {
   echo -e "${style_blue}$@${style_normal}"
 }
 
+typeset -U path PATH
+
 command_exists() {
-  command=$1
-  if ! testcommand="$(type -p "$1")" || [[ -z $testcommand ]]; then
-    echo false
-  else
-    echo true
-  fi
+  (( $+commands[$1] ))
 }
 
 prepend_path() {
+  local p
+
   p=$1
-  if [ -d $p ]; then
-    if [[ $PATH != *"$p"* ]]; then
-      export PATH=$p:$PATH
-    fi
+  if [ -d "$p" ]; then
+    path=("$p" $path)
+    export PATH
   fi
-  unset p
 }
 
 append_path() {
+  local p
+
   p=$1
-  if [ -d $p ]; then
-    if [[ $PATH != *"$p"* ]]; then
-      export PATH=$PATH:$p
-    fi
+  if [ -d "$p" ]; then
+    path+=("$p")
+    export PATH
   fi
-  unset p
 }
 
 path_remove() {

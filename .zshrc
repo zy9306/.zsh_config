@@ -1,18 +1,14 @@
 # -*- mode: sh -*-
 
-export ZDOTDIR="$HOME/.zsh_config"
 export ZSH_PLUGINS_DIR="$HOME/.zsh_config/plugins"
 
 source $ZDOTDIR/.shutils.sh
 
 source $ZDOTDIR/app_configs/paths.sh
 
-export TERM=xterm-256color
-
 export LC_CTYPE="zh_CN.UTF-8"
 
-autoload -Uz compinit && compinit
-autoload -Uz promptinit && promptinit
+autoload -Uz compinit && compinit -d "$ZDOTDIR/.zcompdump"
 
 # HISTORY START
 HISTFILE="$HOME/.zsh_history"
@@ -33,16 +29,15 @@ setopt HIST_VERIFY
 setopt HIST_BEEP
 # HISTORY END
 
-source $ZSH_PLUGINS_DIR/zsh-async/async.zsh
-
-if [[ $(command_exists mise) == true ]]; then
+if command_exists mise; then
   eval "$(mise activate zsh)"
 else
   echo_red "!!! mise is not installed"
 fi
 
 # pure theme
-if [[ $(command_exists starship) == false ]]; then
+if ! command_exists starship; then
+  source $ZSH_PLUGINS_DIR/zsh-async/async.zsh
   fpath+=($ZSH_PLUGINS_DIR/pure)
   autoload -Uz promptinit && promptinit
   prompt -s pure
@@ -51,7 +46,7 @@ fi
 # enhancd START
 source $ZSH_PLUGINS_DIR/enhancd/init.sh
 export ENHANCD_AWK=awk
-if [[ $(command_exists fzf) == true ]]; then
+if command_exists fzf; then
   ENHANCD_FILTER=fzf:fzy:peco:non-existing-filter
   export ENHANCD_FILTER
 fi
@@ -59,22 +54,20 @@ fi
 
 if [ -f $HOME/.my_env ]; then
   source $HOME/.my_env
-else
-  touch $HOME/.my_env
 fi
 
 # make sure source .app_configs at the end
 source $ZDOTDIR/app_configs/load.sh
 
-if [[ $(command_exists starship) == true ]]; then
-  export STARSHIP_CONFIG=~/.starship
+if command_exists starship; then
+  export STARSHIP_CONFIG="$HOME/.starship"
   eval "$(starship init zsh)"
 else
   echo_red "!!! starship is not installed see: https://github.com/starship/starship"
 fi
 
-source $ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source $ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $ZSH_PLUGINS_DIR/z/z.sh
+source $ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 bindkey -e

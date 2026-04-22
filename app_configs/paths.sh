@@ -23,15 +23,9 @@ append_path "$HOME/.local/bin"
 append_path "/usr/sbin"
 
 if [[ $(uname -s) == "Darwin" ]]; then
-  export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib
+	export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib
 fi
 
 if [[ $(uname -s) == "Darwin" ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv zsh)"
-  prepend_path "$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin"
-fi
-
-if [[ $(command_exists rbenv) == true ]]; then
-  export PATH="$HOME/.rbenv/bin:$PATH"
-  eval "$(rbenv init - zsh)"
+	prepend_path "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/coreutils/libexec/gnubin"
 fi
