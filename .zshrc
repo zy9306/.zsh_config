@@ -56,6 +56,10 @@ if [ -f $HOME/.my_env ]; then
   source $HOME/.my_env
 fi
 
+if [ -f $HOME/.my_secret_env ]; then
+  source $HOME/.my_secret_env
+fi
+
 # make sure source .app_configs at the end
 source $ZDOTDIR/app_configs/load.sh
 
