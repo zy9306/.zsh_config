@@ -81,12 +81,15 @@ tn() {
 
 tsd() {
   local confirm current_session
+  local selected_session
+  local -a sessions
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
 Usage: tsd [--all]
 
   Without arguments, delete the current tmux session.
+  If fzf is installed, pick the session to delete with the current session listed first.
   --all     Delete all tmux sessions after confirmation.
   -h        Show this help.
   --help    Show this help.
@@ -136,6 +139,20 @@ EOF
   if [ -z "$current_session" ]; then
     echo_red_bold "Failed to determine current tmux session"
     return 1
+  fi
+
+  if command_exists fzf; then
+    sessions=(
+      "$current_session"
+      ${(@f)$(tmux list-sessions -F '#{session_name}' 2>/dev/null | grep -vx -- "$current_session")}
+    )
+
+    selected_session=$(printf '%s\n' "${sessions[@]}" | fzf --prompt='tsd> ' --height=40%)
+    if [ -z "$selected_session" ]; then
+      return 130
+    fi
+
+    current_session=$selected_session
   fi
 
   tmux kill-session -t "$current_session"
@@ -558,8 +575,9 @@ gw() {
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: gw <branch_name>|.|-D|list|-h|--help
+Usage: gw [branch_name]|.|-D|list|-h|--help
 
+  gw                Pick an existing worktree branch with fzf
   gw <branch_name>  Create or enter a worktree named <repo>-<branch_name>
   gw .              Jump back to the original worktree
   gw -D             Remove the current linked worktree after confirmation
@@ -570,8 +588,22 @@ EOF
     return 0
   fi
 
+  if [ $# -eq 0 ]; then
+    if ! command_exists fzf; then
+      echo_red_bold "fzf is not installed"
+      return 1
+    fi
+
+    branch_name=$(gw list | fzf --prompt='gw> ' --height=40%)
+    if [ -z "$branch_name" ]; then
+      return 130
+    fi
+
+    set -- "$branch_name"
+  fi
+
   if [ $# -ne 1 ]; then
-    echo_red_bold "Usage: gw <branch_name>|.|-D|list|-h|--help"
+    echo_red_bold "Usage: gw [branch_name]|.|-D|list|-h|--help"
     return 1
   fi
 
