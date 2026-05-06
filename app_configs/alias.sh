@@ -1,4 +1,5 @@
 alias oc="opencode"
+alias cx="codex"
 
 alias fd='fd --hidden --follow --no-ignore-vcs'
 
