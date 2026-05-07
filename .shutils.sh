@@ -208,10 +208,11 @@ _bak_original_name() {
 }
 
 _bak_copy() {
-  local src desc normalized_src base_name dir_name backup_path
+  local src desc force normalized_src base_name dir_name backup_path
 
   src=$1
   desc=$2
+  force=$3
   normalized_src=${src%/}
 
   if [ -z "$normalized_src" ]; then
@@ -237,8 +238,15 @@ _bak_copy() {
   backup_path="$dir_name/${base_name}_bak_$desc"
 
   if [ -e "$backup_path" ] || [ -L "$backup_path" ]; then
-    echo_red_bold "Backup already exists: $backup_path"
-    return 1
+    if [ "$force" != true ]; then
+      echo_red_bold "Backup already exists: $backup_path"
+      return 1
+    fi
+
+    if ! rm -rf -- "$backup_path"; then
+      echo_red_bold "Failed to remove existing backup: $backup_path"
+      return 1
+    fi
   fi
 
   if cp -Rp "$normalized_src" "$backup_path"; then
@@ -307,19 +315,49 @@ EOF
 }
 
 replace() {
-  local src target backup_desc normalized_src normalized_target
+  local force=false src target backup_desc normalized_src normalized_target
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: replace <src> <target> <target_bak_desc>
+Usage: replace [-f] <src> <target> <target_bak_desc>
 
   Backup <target> to <target>_bak_<target_bak_desc>, then copy <src> to <target>
+  -f, --force  Overwrite existing backup
 EOF
     return 0
   fi
 
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -f|--force)
+        force=true
+        shift
+        ;;
+      -h|--help)
+        cat <<'EOF'
+Usage: replace [-f] <src> <target> <target_bak_desc>
+
+  Backup <target> to <target>_bak_<target_bak_desc>, then copy <src> to <target>
+  -f, --force  Overwrite existing backup
+EOF
+        return 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -* )
+        echo_red_bold "Usage: replace [-f] <src> <target> <target_bak_desc>"
+        return 1
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   if [ $# -ne 3 ]; then
-    echo_red_bold "Usage: replace <src> <target> <target_bak_desc>"
+    echo_red_bold "Usage: replace [-f] <src> <target> <target_bak_desc>"
     return 1
   fi
 
@@ -352,7 +390,7 @@ EOF
     return 1
   fi
 
-  if ! _bak_copy "$normalized_target" "$backup_desc"; then
+  if ! _bak_copy "$normalized_target" "$backup_desc" "$force"; then
     return 1
   fi
 
