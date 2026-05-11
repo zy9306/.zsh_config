@@ -58,6 +58,33 @@ path_remove() {
   path=("${(@)path:#"$1"}")
 }
 
+path() {
+  local target
+
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    cat <<'EOF'
+Usage: path <file_or_dir>
+
+  Print the absolute path of <file_or_dir>.
+EOF
+    return 0
+  fi
+
+  if [ $# -ne 1 ]; then
+    echo_red_bold "Usage: path <file_or_dir>"
+    return 1
+  fi
+
+  target=$1
+
+  if [ ! -e "$target" ] && [ ! -L "$target" ]; then
+    echo_red_bold "Not found: $target"
+    return 1
+  fi
+
+  print -r -- "${target:A}"
+}
+
 send_title() {
   if [ $# -eq 0 ]; then
     title=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
