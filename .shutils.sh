@@ -633,22 +633,71 @@ _gw_link_shared_files() {
   _gw_link_shared_path "$source_root/AGENTS.md" "$target_root/AGENTS.md" || return 1
 }
 
+_gw_prepare_base_branch() {
+  local original_root base_branch current_branch
+
+  original_root=$1
+  base_branch=$2
+
+  current_branch=$(git -C "$original_root" branch --show-current 2>/dev/null)
+
+  if [ "$current_branch" != "$base_branch" ]; then
+    if git -C "$original_root" show-ref --verify --quiet "refs/heads/$base_branch"; then
+      git -C "$original_root" switch "$base_branch" || return 1
+    elif git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
+      git -C "$original_root" switch --track -c "$base_branch" "origin/$base_branch" || return 1
+    else
+      echo_red_bold "Base branch not found: $base_branch"
+      return 1
+    fi
+  fi
+
+  if git -C "$original_root" rev-parse --verify --quiet '@{upstream}' >/dev/null 2>&1; then
+    git -C "$original_root" pull --ff-only || return 1
+  elif git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
+    git -C "$original_root" pull --ff-only origin "$base_branch" || return 1
+  fi
+}
+
 gw() {
   emulate -L zsh
 
   local branch_name repo_root common_dir original_root repo_name repo_parent dir_branch_name worktree_dir confirm line
+  local base_branch arg
+  local -a args
+
+  base_branch=master
+  args=()
+
+  for arg in "$@"; do
+    case "$arg" in
+      --base=*)
+        base_branch=${arg#--base=}
+        if [ -z "$base_branch" ]; then
+          echo_red_bold "Usage: gw [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help"
+          return 1
+        fi
+        ;;
+      *)
+        args+=("$arg")
+        ;;
+    esac
+  done
+
+  set -- "${args[@]}"
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: gw [branch_name]|.|-D|list|-h|--help
+Usage: gw [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help
 
-  gw                Pick an existing worktree branch with fzf
-  gw <branch_name>  Create or enter a worktree named <repo>-<branch_name>
-  gw .              Jump back to the original worktree
-  gw -D             Remove the current linked worktree after confirmation
-  gw list           List branch names for all worktrees
-  gw -h             Show this help
-  gw --help         Show this help
+  gw                         Pick an existing worktree branch with fzf
+  gw <branch_name>           Create or enter a worktree named <repo>-<branch_name>
+  gw --base=dev <branch>     Create a new worktree branch from dev instead of master
+  gw .                       Jump back to the original worktree
+  gw -D                      Remove the current linked worktree after confirmation
+  gw list                    List branch names for all worktrees
+  gw -h                      Show this help
+  gw --help                  Show this help
 EOF
     return 0
   fi
@@ -668,7 +717,7 @@ EOF
   fi
 
   if [ $# -ne 1 ]; then
-    echo_red_bold "Usage: gw [branch_name]|.|-D|list|-h|--help"
+    echo_red_bold "Usage: gw [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help"
     return 1
   fi
 
@@ -727,8 +776,8 @@ EOF
 
   branch_name=$1
 
-  repo_name=$(basename "$repo_root")
-  repo_parent=$(dirname "$repo_root")
+  repo_name=$(basename "$original_root")
+  repo_parent=$(dirname "$original_root")
   dir_branch_name=${branch_name//\//-}
   worktree_dir="$repo_parent/${repo_name}-${dir_branch_name}"
 
@@ -743,10 +792,12 @@ EOF
     return 0
   fi
 
+  _gw_prepare_base_branch "$original_root" "$base_branch" || return 1
+
   if git show-ref --verify --quiet "refs/heads/$branch_name" || git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
-    git worktree add "$worktree_dir" "$branch_name" || return 1
+    git -C "$original_root" worktree add "$worktree_dir" "$branch_name" || return 1
   else
-    git worktree add -b "$branch_name" "$worktree_dir" || return 1
+    git -C "$original_root" worktree add -b "$branch_name" "$worktree_dir" "$base_branch" || return 1
   fi
 
   _gw_link_shared_files "$original_root" "$worktree_dir" || return 1
