@@ -662,7 +662,7 @@ _gw_prepare_base_branch() {
 gw() {
   emulate -L zsh
 
-  local branch_name repo_root common_dir original_root repo_name repo_parent dir_branch_name worktree_dir confirm line
+  local branch_name repo_root common_dir original_root repo_name repo_parent dir_branch_name worktree_parent worktree_dir legacy_worktree_dir confirm line
   local base_branch arg
   local -a args
 
@@ -691,7 +691,7 @@ gw() {
 Usage: gw [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help
 
   gw                         Pick an existing worktree branch with fzf
-  gw <branch_name>           Create or enter a worktree named <repo>-<branch_name>
+  gw <branch_name>           Create or enter ../<repo>_worktree/<repo>-<branch_name>
   gw --base=dev <branch>     Create a new worktree branch from dev instead of master
   gw .                       Jump back to the original worktree
   gw -D                      Remove the current linked worktree after confirmation
@@ -779,7 +779,9 @@ EOF
   repo_name=$(basename "$original_root")
   repo_parent=$(dirname "$original_root")
   dir_branch_name=${branch_name//\//-}
-  worktree_dir="$repo_parent/${repo_name}-${dir_branch_name}"
+  worktree_parent="$repo_parent/${repo_name}_worktree"
+  worktree_dir="$worktree_parent/${repo_name}-${dir_branch_name}"
+  legacy_worktree_dir="$repo_parent/${repo_name}-${dir_branch_name}"
 
   if [ -e "$worktree_dir" ] && [ ! -d "$worktree_dir" ]; then
     echo_red_bold "Path already exists and is not a directory: $worktree_dir"
@@ -791,6 +793,19 @@ EOF
     cd "$worktree_dir" || return 1
     return 0
   fi
+
+  if [ -d "$legacy_worktree_dir" ]; then
+    _gw_link_shared_files "$original_root" "$legacy_worktree_dir" || return 1
+    cd "$legacy_worktree_dir" || return 1
+    return 0
+  fi
+
+  if [ -e "$worktree_parent" ] && [ ! -d "$worktree_parent" ]; then
+    echo_red_bold "Path already exists and is not a directory: $worktree_parent"
+    return 1
+  fi
+
+  mkdir -p "$worktree_parent" || return 1
 
   _gw_prepare_base_branch "$original_root" "$base_branch" || return 1
 
