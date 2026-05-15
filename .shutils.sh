@@ -648,6 +648,7 @@ _gw_prepare_base_branch() {
       git -C "$original_root" switch --track -c "$base_branch" "origin/$base_branch" || return 1
     else
       echo_red_bold "Base branch not found: $base_branch"
+      echo_red_bold "Use --base=<branch_name> to specify the base branch."
       return 1
     fi
   fi
