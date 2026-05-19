@@ -3,7 +3,11 @@ alias cx="codex"
 
 alias fd='fd --hidden --follow --no-ignore-vcs'
 
-function y() {
+alias y='yazi'
+
+alias gp="git push origin `git branch --show-current`"
+
+function Y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	command yazi "$@" --cwd-file="$tmp"
 	IFS= read -r -d '' cwd < "$tmp"
