@@ -5,8 +5,6 @@ alias fd='fd --hidden --follow --no-ignore-vcs'
 
 alias y='yazi'
 
-alias gp="git push origin `git branch --show-current`"
-
 function Y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	command yazi "$@" --cwd-file="$tmp"

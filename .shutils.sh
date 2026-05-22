@@ -189,6 +189,19 @@ fh() {
   print -z $(([ -n "$ZSH_NAME" ] && fc -l 1 || history 0) | fzf +s --tac | sed 's/ *[0-9]* *//')
 }
 
+gp() {
+  emulate -L zsh
+
+  local branch
+
+  branch=$(git symbolic-ref --quiet --short HEAD) || {
+    echo_red_bold "gp: not on a branch"
+    return 1
+  }
+
+  git push origin "$branch"
+}
+
 gc() {
   emulate -L zsh
 
