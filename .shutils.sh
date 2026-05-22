@@ -189,6 +189,77 @@ fh() {
   print -z $(([ -n "$ZSH_NAME" ] && fc -l 1 || history 0) | fzf +s --tac | sed 's/ *[0-9]* *//')
 }
 
+gc() {
+  emulate -L zsh
+
+  local remote selected_branch local_branch
+
+  remote=0
+
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    cat <<'EOF'
+Usage: gc [-r]
+
+  使用 fzf 选择 git 分支并切换过去。
+  -r        先 fetch 更新远端分支，再从 remote 分支中选择。
+  -h        显示帮助。
+  --help    显示帮助。
+EOF
+    return 0
+  fi
+
+  if [ "$1" = "-r" ]; then
+    remote=1
+    shift
+  fi
+
+  if [ $# -ne 0 ]; then
+    echo_red_bold "Usage: gc [-r]"
+    return 1
+  fi
+
+  if ! command_exists fzf; then
+    echo_red_bold "fzf is not installed"
+    return 1
+  fi
+
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo_red_bold "Not inside a git repository"
+    return 1
+  fi
+
+  if [ "$remote" -eq 1 ]; then
+    git fetch --prune || return 1
+
+    selected_branch=$(
+      git for-each-ref --format='%(refname:short)' refs/remotes |
+        grep -v '/HEAD$' |
+        fzf --prompt='gc remote> ' --height=40%
+    )
+  else
+    selected_branch=$(
+      git for-each-ref --format='%(refname:short)' refs/heads |
+        fzf --prompt='gc> ' --height=40%
+    )
+  fi
+
+  if [ -z "$selected_branch" ]; then
+    return 130
+  fi
+
+  if [ "$remote" -eq 1 ]; then
+    local_branch=${selected_branch#*/}
+
+    if git show-ref --verify --quiet "refs/heads/$local_branch"; then
+      git switch "$local_branch"
+    else
+      git switch --track "$selected_branch"
+    fi
+  else
+    git switch "$selected_branch"
+  fi
+}
+
 _bak_default_desc() {
   date '+%Y-%m-%d-%H-%M-%S'
 }
