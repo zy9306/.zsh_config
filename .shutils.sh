@@ -192,14 +192,42 @@ fh() {
 gp() {
   emulate -L zsh
 
-  local branch
+  local branch force
+
+  force=0
+
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    cat <<'EOF'
+Usage: gp [-f]
+
+  Push the current git branch to origin.
+  -f        Force push the current branch.
+  -h        Show help.
+  --help    Show help.
+EOF
+    return 0
+  fi
+
+  if [ "$1" = "-f" ] || [ "$1" = "--force" ]; then
+    force=1
+    shift
+  fi
+
+  if [ $# -ne 0 ]; then
+    echo_red_bold "Usage: gp [-f]"
+    return 1
+  fi
 
   branch=$(git symbolic-ref --quiet --short HEAD) || {
     echo_red_bold "gp: not on a branch"
     return 1
   }
 
-  git push origin "$branch"
+  if [ "$force" -eq 1 ]; then
+    git push -f origin "$branch"
+  else
+    git push origin "$branch"
+  fi
 }
 
 gc() {
