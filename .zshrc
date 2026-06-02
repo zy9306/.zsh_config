@@ -2,13 +2,24 @@
 
 export ZSH_PLUGINS_DIR="$HOME/.zsh_config/plugins"
 
-source $ZDOTDIR/.shutils.sh
+source "$ZDOTDIR/.shutils.sh"
 
-source $ZDOTDIR/app_configs/paths.sh
+source "$ZDOTDIR/app_configs/paths.sh"
 
 export LC_CTYPE="zh_CN.UTF-8"
 
-autoload -Uz compinit && compinit -d "$ZDOTDIR/.zcompdump"
+autoload -Uz compinit
+_zcompdump="$ZDOTDIR/.zcompdump"
+_zcompdump_zwc="${_zcompdump}.zwc"
+if [[ -s "$_zcompdump" ]]; then
+  compinit -C -d "$_zcompdump"
+else
+  compinit -d "$_zcompdump"
+fi
+if [[ -s "$_zcompdump" && ( ! -s "$_zcompdump_zwc" || "$_zcompdump" -nt "$_zcompdump_zwc" ) ]]; then
+  zcompile "$_zcompdump"
+fi
+unset _zcompdump _zcompdump_zwc
 
 # HISTORY START
 HISTFILE="$HOME/.zsh_history"
@@ -37,14 +48,14 @@ fi
 
 # pure theme
 if ! command_exists starship; then
-  source $ZSH_PLUGINS_DIR/zsh-async/async.zsh
-  fpath+=($ZSH_PLUGINS_DIR/pure)
+  source "$ZSH_PLUGINS_DIR/zsh-async/async.zsh"
+  fpath+=("$ZSH_PLUGINS_DIR/pure")
   autoload -Uz promptinit && promptinit
   prompt -s pure
 fi
 
 # enhancd START
-source $ZSH_PLUGINS_DIR/enhancd/init.sh
+source "$ZSH_PLUGINS_DIR/enhancd/init.sh"
 export ENHANCD_AWK=awk
 if command_exists fzf; then
   ENHANCD_FILTER=fzf:fzy:peco:non-existing-filter
@@ -61,18 +72,18 @@ if [ -f $HOME/.my_secret_env ]; then
 fi
 
 # make sure source .app_configs at the end
-source $ZDOTDIR/app_configs/load.sh
+source "$ZDOTDIR/app_configs/load.sh"
 
-if command_exists starship; then
+if command_exists starship && [[ ${TERM:-} != dumb ]]; then
   export STARSHIP_CONFIG="$HOME/.starship"
   eval "$(starship init zsh)"
-else
+elif [[ ${TERM:-} != dumb ]]; then
   echo_red "!!! starship is not installed see: https://github.com/starship/starship"
 fi
 
-source $ZSH_PLUGINS_DIR/z/z.sh
-source $ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh
-source $ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source "$ZSH_PLUGINS_DIR/z/z.sh"
+source "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh"
+source "$ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 bindkey -e
 

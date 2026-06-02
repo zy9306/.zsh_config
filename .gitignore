@@ -1,5 +1,6 @@
 result
 .DS_Store
 .zcompdump
+.zcompdump.zwc
 .my_env
 .zsh_sessions/
