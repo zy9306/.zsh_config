@@ -103,6 +103,7 @@ tn() {
   else
     title=$1
   fi
+  title=${title//./_}
 
   if tmux has-session -t "$title" 2>/dev/null; then
     echo "Attaching tmux session '$title'"
