@@ -75,3 +75,12 @@ source $ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 bindkey -e
+
+_tmux_clear_stale_pane_is_vim() {
+  [[ -z "$TMUX" || -z "$TMUX_PANE" || -n "$NVIM" ]] && return
+  command -v tmux >/dev/null 2>&1 || return
+  tmux set-option -pt "$TMUX_PANE" @pane-is-vim 0 >/dev/null 2>&1
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _tmux_clear_stale_pane_is_vim
