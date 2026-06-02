@@ -96,13 +96,27 @@ send_title() {
 }
 
 tn() {
+  local title
+
   if [ $# -eq 0 ]; then
     title=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
-	echo "Creating tmux session '$title'"
-	tmux new -A -s "$title"
   else
-	echo "Creating tmux session '$1'"
-	tmux new -A -s "$1"
+    title=$1
+  fi
+
+  if tmux has-session -t "$title" 2>/dev/null; then
+    echo "Attaching tmux session '$title'"
+  else
+    echo "Creating tmux session '$title'"
+    tmux new-session -d -s "$title" -c "$PWD"
+    tmux split-window -h -t "$title:" -c "$PWD"
+    tmux select-pane -t "$title:" -L
+  fi
+
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "$title"
+  else
+    tmux attach-session -t "$title"
   fi
 }
 
