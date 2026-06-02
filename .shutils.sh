@@ -85,6 +85,84 @@ EOF
   print -r -- "${target:A}"
 }
 
+git-main-pull() {
+  emulate -L zsh
+
+  local branch current_branch git_common_dir target_dir worktree_path worktree_branch line
+
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    cat <<'EOF'
+Usage: git-main-pull [git-pull-args...]
+
+  Switch to main/master and pull latest code.
+  When called from a linked worktree, cd back to the worktree that has
+  main/master checked out before pulling.
+
+Aliases:
+  gmp
+EOF
+    return 0
+  fi
+
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo_red_bold "Not inside a git work tree"
+    return 1
+  fi
+
+  if git show-ref --verify --quiet refs/heads/main ||
+    git show-ref --verify --quiet refs/remotes/origin/main; then
+    branch=main
+  elif git show-ref --verify --quiet refs/heads/master ||
+    git show-ref --verify --quiet refs/remotes/origin/master; then
+    branch=master
+  else
+    echo_red_bold "No main/master branch found"
+    return 1
+  fi
+
+  while IFS= read -r line; do
+    case "$line" in
+      worktree\ *)
+        worktree_path=${line#worktree }
+        worktree_branch=
+        ;;
+      branch\ *)
+        worktree_branch=${line#branch }
+        if [ "$worktree_branch" = "refs/heads/$branch" ]; then
+          target_dir=$worktree_path
+          break
+        fi
+        ;;
+    esac
+  done < <(git worktree list --porcelain)
+
+  if [ -z "$target_dir" ]; then
+    git_common_dir=$(git rev-parse --git-common-dir) || return 1
+    git_common_dir=${git_common_dir:A}
+
+    if [ "${git_common_dir:t}" = ".git" ]; then
+      target_dir=${git_common_dir:h}
+    else
+      target_dir=$(git rev-parse --show-toplevel) || return 1
+    fi
+  fi
+
+  cd "$target_dir" || return 1
+
+  current_branch=$(git branch --show-current 2>/dev/null)
+  if [ "$current_branch" != "$branch" ]; then
+    if git show-ref --verify --quiet "refs/heads/$branch"; then
+      git switch "$branch" || return 1
+    else
+      git switch --track "origin/$branch" || return 1
+    fi
+  fi
+
+  git pull --ff-only "$@"
+}
+
+alias gmp='git-main-pull'
+
 # 重建 zsh 补全缓存。新装命令补全后不生效、补全异常，或想刷新
 # .zcompdump/.zcompdump.zwc 时使用。
 zsh-rebuild-cache() {
