@@ -1,18 +1,16 @@
-git-main-pull() {
+git-pull-main() {
   emulate -L zsh
 
   local branch current_branch git_common_dir target_dir worktree_path worktree_branch line
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: git-main-pull [git-pull-args...]
+Usage: git-pull-main [git-pull-args...]
 
   Switch to main/master and pull latest code.
   When called from a linked worktree, cd back to the worktree that has
   main/master checked out before pulling.
 
-Aliases:
-  gmp
 EOF
     return 0
   fi
@@ -74,8 +72,7 @@ EOF
   git pull --ff-only "$@"
 }
 
-alias gmp='git-main-pull'
-gp() {
+git-push-current() {
   emulate -L zsh
 
   local branch force
@@ -84,7 +81,7 @@ gp() {
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: gp [-f]
+Usage: git-push-current [-f]
 
   Push the current git branch to origin.
   -f        Force push the current branch.
@@ -100,12 +97,12 @@ EOF
   fi
 
   if [ $# -ne 0 ]; then
-    echo_red_bold "Usage: gp [-f]"
+    echo_red_bold "Usage: git-push-current [-f]"
     return 1
   fi
 
   branch=$(git symbolic-ref --quiet --short HEAD) || {
-    echo_red_bold "gp: not on a branch"
+    echo_red_bold "git-push-current: not on a branch"
     return 1
   }
 
@@ -116,7 +113,7 @@ EOF
   fi
 }
 
-gc() {
+git-switch-branch() {
   emulate -L zsh
 
   local remote selected_branch local_branch
@@ -125,7 +122,7 @@ gc() {
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: gc [-r]
+Usage: git-switch-branch [-r]
 
   使用 fzf 选择 git 分支并切换过去。
   -r        先 fetch 更新远端分支，再从 remote 分支中选择。
@@ -141,7 +138,7 @@ EOF
   fi
 
   if [ $# -ne 0 ]; then
-    echo_red_bold "Usage: gc [-r]"
+    echo_red_bold "Usage: git-switch-branch [-r]"
     return 1
   fi
 
@@ -161,12 +158,12 @@ EOF
     selected_branch=$(
       git for-each-ref --format='%(refname:short)' refs/remotes |
         grep -v '/HEAD$' |
-        fzf --prompt='gc remote> ' --height=40%
+        fzf --prompt='git-switch-branch remote> ' --height=40%
     )
   else
     selected_branch=$(
       git for-each-ref --format='%(refname:short)' refs/heads |
-        fzf --prompt='gc> ' --height=40%
+        fzf --prompt='git-switch-branch> ' --height=40%
     )
   fi
 
@@ -186,7 +183,8 @@ EOF
     git switch "$selected_branch"
   fi
 }
-_gw_link_shared_path() {
+
+_git_worktree_link_shared_path() {
   local source_path target_path
 
   source_path=$1
@@ -203,20 +201,20 @@ _gw_link_shared_path() {
   ln -s "$source_path" "$target_path" || return 1
 }
 
-_gw_link_shared_files() {
+_git_worktree_link_shared_files() {
   local source_root target_root
 
   source_root=$1
   target_root=$2
 
-  _gw_link_shared_path "$source_root/ai_docs" "$target_root/ai_docs" || return 1
-  _gw_link_shared_path "$source_root/draft" "$target_root/draft" || return 1
-  _gw_link_shared_path "$source_root/.venv" "$target_root/.venv" || return 1
-  _gw_link_shared_path "$source_root/mise.toml" "$target_root/mise.toml" || return 1
-  _gw_link_shared_path "$source_root/AGENTS.md" "$target_root/AGENTS.md" || return 1
+  _git_worktree_link_shared_path "$source_root/ai_docs" "$target_root/ai_docs" || return 1
+  _git_worktree_link_shared_path "$source_root/draft" "$target_root/draft" || return 1
+  _git_worktree_link_shared_path "$source_root/.venv" "$target_root/.venv" || return 1
+  _git_worktree_link_shared_path "$source_root/mise.toml" "$target_root/mise.toml" || return 1
+  _git_worktree_link_shared_path "$source_root/AGENTS.md" "$target_root/AGENTS.md" || return 1
 }
 
-_gw_prepare_base_branch() {
+_git_worktree_prepare_base_branch() {
   local original_root base_branch current_branch
 
   original_root=$1
@@ -243,7 +241,7 @@ _gw_prepare_base_branch() {
   fi
 }
 
-gw() {
+git-worktree() {
   emulate -L zsh
 
   local branch_name repo_root common_dir original_root repo_name repo_parent dir_branch_name worktree_parent worktree_dir legacy_worktree_dir confirm line
@@ -258,7 +256,7 @@ gw() {
       --base=*)
         base_branch=${arg#--base=}
         if [ -z "$base_branch" ]; then
-          echo_red_bold "Usage: gw [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help"
+          echo_red_bold "Usage: git-worktree [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help"
           return 1
         fi
         ;;
@@ -272,16 +270,16 @@ gw() {
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: gw [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help
+Usage: git-worktree [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help
 
-  gw                         Pick an existing worktree branch with fzf
-  gw <branch_name>           Create or enter ../<repo>_worktrees/<repo>-<branch_name>
-  gw --base=dev <branch>     Create a new worktree branch from dev instead of master
-  gw .                       Jump back to the original worktree
-  gw -D                      Remove the current linked worktree after confirmation
-  gw list                    List branch names for all worktrees
-  gw -h                      Show this help
-  gw --help                  Show this help
+  git-worktree                         Pick an existing worktree branch with fzf
+  git-worktree <branch_name>           Create or enter ../<repo>_worktrees/<repo>-<branch_name>
+  git-worktree --base=dev <branch>     Create a new worktree branch from dev instead of master
+  git-worktree .                       Jump back to the original worktree
+  git-worktree -D                      Remove the current linked worktree after confirmation
+  git-worktree list                    List branch names for all worktrees
+  git-worktree -h                      Show this help
+  git-worktree --help                  Show this help
 EOF
     return 0
   fi
@@ -292,7 +290,7 @@ EOF
       return 1
     fi
 
-    branch_name=$(gw list | fzf --prompt='gw> ' --height=40%)
+    branch_name=$(git-worktree list | fzf --prompt='git-worktree> ' --height=40%)
     if [ -z "$branch_name" ]; then
       return 130
     fi
@@ -301,7 +299,7 @@ EOF
   fi
 
   if [ $# -ne 1 ]; then
-    echo_red_bold "Usage: gw [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help"
+    echo_red_bold "Usage: git-worktree [--base=<branch_name>] [branch_name]|.|-D|list|-h|--help"
     return 1
   fi
 
@@ -373,13 +371,13 @@ EOF
   fi
 
   if [ -d "$worktree_dir" ]; then
-    _gw_link_shared_files "$original_root" "$worktree_dir" || return 1
+    _git_worktree_link_shared_files "$original_root" "$worktree_dir" || return 1
     cd "$worktree_dir" || return 1
     return 0
   fi
 
   if [ -d "$legacy_worktree_dir" ]; then
-    _gw_link_shared_files "$original_root" "$legacy_worktree_dir" || return 1
+    _git_worktree_link_shared_files "$original_root" "$legacy_worktree_dir" || return 1
     cd "$legacy_worktree_dir" || return 1
     return 0
   fi
@@ -391,7 +389,7 @@ EOF
 
   mkdir -p "$worktree_parent" || return 1
 
-  _gw_prepare_base_branch "$original_root" "$base_branch" || return 1
+  _git_worktree_prepare_base_branch "$original_root" "$base_branch" || return 1
 
   if git show-ref --verify --quiet "refs/heads/$branch_name" || git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
     git -C "$original_root" worktree add "$worktree_dir" "$branch_name" || return 1
@@ -399,6 +397,192 @@ EOF
     git -C "$original_root" worktree add -b "$branch_name" "$worktree_dir" "$base_branch" || return 1
   fi
 
-  _gw_link_shared_files "$original_root" "$worktree_dir" || return 1
+  _git_worktree_link_shared_files "$original_root" "$worktree_dir" || return 1
   cd "$worktree_dir" || return 1
 }
+
+git-menu() {
+  emulate -L zsh
+
+  local action base_branch branch_name command_status mode selected
+
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    cat <<'EOF'
+Usage: git-menu [args...]
+
+  Pick a git task with fzf and run it.
+  When called with args, they are forwarded to the selected top-level helper.
+  Press Esc in a submenu to go back one level.
+
+Aliases:
+  gm
+EOF
+    return 0
+  fi
+
+  if ! command_exists fzf; then
+    echo_red_bold "fzf is not installed"
+    return 1
+  fi
+
+  while true; do
+    if ! selected=$(
+      cat <<'EOF' | fzf --prompt='git> ' --height=40% --delimiter=$'\t' --with-nth=1,2
+pull-main	Switch to main/master and pull latest code
+push-current	Push the current branch to origin
+switch-branch	Switch local or remote branch
+worktree	Open, create, list, or remove worktrees
+EOF
+    ); then
+      return 130
+    fi
+
+    if [ -z "$selected" ]; then
+      return 130
+    fi
+
+    action=${selected%%$'\t'*}
+
+    case "$action" in
+      pull-main)
+        git-pull-main "$@"
+        return $?
+        ;;
+      push-current)
+        if [ $# -gt 0 ]; then
+          git-push-current "$@"
+          return $?
+        fi
+
+        if ! selected=$(
+          cat <<'EOF' | fzf --prompt='git push> ' --height=40% --delimiter=$'\t' --with-nth=1,2
+normal	Push current branch
+force	Force push current branch
+EOF
+        ); then
+          continue
+        fi
+        if [ -z "$selected" ]; then
+          continue
+        fi
+
+        mode=${selected%%$'\t'*}
+        case "$mode" in
+          normal)
+            git-push-current
+            return $?
+            ;;
+          force)
+            git-push-current --force
+            return $?
+            ;;
+        esac
+        ;;
+      switch-branch)
+        if [ $# -gt 0 ]; then
+          git-switch-branch "$@"
+          return $?
+        fi
+
+        while true; do
+          if ! selected=$(
+            cat <<'EOF' | fzf --prompt='git branch> ' --height=40% --delimiter=$'\t' --with-nth=1,2
+local	Switch local branch
+remote	Fetch and switch remote branch
+EOF
+          ); then
+            break
+          fi
+          if [ -z "$selected" ]; then
+            break
+          fi
+
+          mode=${selected%%$'\t'*}
+          case "$mode" in
+            local)
+              git-switch-branch
+              command_status=$?
+              if [ "$command_status" -eq 130 ]; then
+                continue
+              fi
+              return "$command_status"
+              ;;
+            remote)
+              git-switch-branch -r
+              command_status=$?
+              if [ "$command_status" -eq 130 ]; then
+                continue
+              fi
+              return "$command_status"
+              ;;
+          esac
+        done
+        ;;
+      worktree)
+        if [ $# -gt 0 ]; then
+          git-worktree "$@"
+          return $?
+        fi
+
+        while true; do
+          if ! selected=$(
+            cat <<'EOF' | fzf --prompt='git worktree> ' --height=40% --delimiter=$'\t' --with-nth=1,2
+pick	Pick an existing worktree branch
+create	Create or open branch worktree
+list	List worktree branches
+original	Jump to original worktree
+delete	Remove current linked worktree
+EOF
+          ); then
+            break
+          fi
+          if [ -z "$selected" ]; then
+            break
+          fi
+
+          mode=${selected%%$'\t'*}
+          case "$mode" in
+            pick)
+              git-worktree
+              command_status=$?
+              if [ "$command_status" -eq 130 ]; then
+                continue
+              fi
+              return "$command_status"
+              ;;
+            create)
+              printf 'branch (empty to go back)> '
+              IFS= read -r branch_name
+              if [ -z "$branch_name" ]; then
+                continue
+              fi
+
+              printf 'base branch (empty for default master)> '
+              IFS= read -r base_branch
+              if [ -n "$base_branch" ]; then
+                git-worktree "--base=$base_branch" "$branch_name"
+              else
+                git-worktree "$branch_name"
+              fi
+              return $?
+              ;;
+            list)
+              git-worktree list
+              return $?
+              ;;
+            original)
+              git-worktree .
+              return $?
+              ;;
+            delete)
+              git-worktree -D
+              return $?
+              ;;
+          esac
+        done
+        ;;
+    esac
+  done
+}
+
+alias gm='git-menu'
