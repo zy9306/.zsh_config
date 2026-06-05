@@ -1,3 +1,12 @@
+_git_print_command() {
+  print -r -- "+ ${(@q)@}" >&2
+}
+
+_git_run() {
+  _git_print_command "$@"
+  "$@"
+}
+
 git-pull-main() {
   emulate -L zsh
 
@@ -58,18 +67,18 @@ EOF
     fi
   fi
 
-  cd "$target_dir" || return 1
+  _git_run cd "$target_dir" || return 1
 
   current_branch=$(git branch --show-current 2>/dev/null)
   if [ "$current_branch" != "$branch" ]; then
     if git show-ref --verify --quiet "refs/heads/$branch"; then
-      git switch "$branch" || return 1
+      _git_run git switch "$branch" || return 1
     else
-      git switch --track "origin/$branch" || return 1
+      _git_run git switch --track "origin/$branch" || return 1
     fi
   fi
 
-  git pull --ff-only "$@"
+  _git_run git pull --ff-only "$@"
 }
 
 git-push-current() {
@@ -107,9 +116,9 @@ EOF
   }
 
   if [ "$force" -eq 1 ]; then
-    git push -f origin "$branch"
+    _git_run git push -f origin "$branch"
   else
-    git push origin "$branch"
+    _git_run git push origin "$branch"
   fi
 }
 
@@ -153,7 +162,7 @@ EOF
   fi
 
   if [ "$remote" -eq 1 ]; then
-    git fetch --prune || return 1
+    _git_run git fetch --prune || return 1
 
     selected_branch=$(
       git for-each-ref --format='%(refname:short)' refs/remotes |
@@ -175,12 +184,12 @@ EOF
     local_branch=${selected_branch#*/}
 
     if git show-ref --verify --quiet "refs/heads/$local_branch"; then
-      git switch "$local_branch"
+      _git_run git switch "$local_branch"
     else
-      git switch --track "$selected_branch"
+      _git_run git switch --track "$selected_branch"
     fi
   else
-    git switch "$selected_branch"
+    _git_run git switch "$selected_branch"
   fi
 }
 
@@ -198,7 +207,7 @@ _git_worktree_link_shared_path() {
     return 0
   fi
 
-  ln -s "$source_path" "$target_path" || return 1
+  _git_run ln -s "$source_path" "$target_path" || return 1
 }
 
 _git_worktree_link_shared_files() {
@@ -224,9 +233,9 @@ _git_worktree_prepare_base_branch() {
 
   if [ "$current_branch" != "$base_branch" ]; then
     if git -C "$original_root" show-ref --verify --quiet "refs/heads/$base_branch"; then
-      git -C "$original_root" switch "$base_branch" || return 1
+      _git_run git -C "$original_root" switch "$base_branch" || return 1
     elif git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
-      git -C "$original_root" switch --track -c "$base_branch" "origin/$base_branch" || return 1
+      _git_run git -C "$original_root" switch --track -c "$base_branch" "origin/$base_branch" || return 1
     else
       echo_red_bold "Base branch not found: $base_branch"
       echo_red_bold "Use --base=<branch_name> to specify the base branch."
@@ -235,9 +244,9 @@ _git_worktree_prepare_base_branch() {
   fi
 
   if git -C "$original_root" rev-parse --verify --quiet '@{upstream}' >/dev/null 2>&1; then
-    git -C "$original_root" pull --ff-only || return 1
+    _git_run git -C "$original_root" pull --ff-only || return 1
   elif git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
-    git -C "$original_root" pull --ff-only origin "$base_branch" || return 1
+    _git_run git -C "$original_root" pull --ff-only origin "$base_branch" || return 1
   fi
 }
 
@@ -314,7 +323,7 @@ EOF
   original_root=$(dirname "$common_dir")
 
   if [ "$1" = "." ]; then
-    cd "$original_root" || return 1
+    _git_run cd "$original_root" || return 1
     return 0
   fi
 
@@ -345,8 +354,8 @@ EOF
 
     case "$confirm" in
       y|Y|yes|YES)
-        cd "$original_root" || return 1
-        git worktree remove "$repo_root" || return 1
+        _git_run cd "$original_root" || return 1
+        _git_run git worktree remove "$repo_root" || return 1
         return 0
         ;;
       *)
@@ -372,13 +381,13 @@ EOF
 
   if [ -d "$worktree_dir" ]; then
     _git_worktree_link_shared_files "$original_root" "$worktree_dir" || return 1
-    cd "$worktree_dir" || return 1
+    _git_run cd "$worktree_dir" || return 1
     return 0
   fi
 
   if [ -d "$legacy_worktree_dir" ]; then
     _git_worktree_link_shared_files "$original_root" "$legacy_worktree_dir" || return 1
-    cd "$legacy_worktree_dir" || return 1
+    _git_run cd "$legacy_worktree_dir" || return 1
     return 0
   fi
 
@@ -387,18 +396,18 @@ EOF
     return 1
   fi
 
-  mkdir -p "$worktree_parent" || return 1
+  _git_run mkdir -p "$worktree_parent" || return 1
 
   _git_worktree_prepare_base_branch "$original_root" "$base_branch" || return 1
 
   if git show-ref --verify --quiet "refs/heads/$branch_name" || git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
-    git -C "$original_root" worktree add "$worktree_dir" "$branch_name" || return 1
+    _git_run git -C "$original_root" worktree add "$worktree_dir" "$branch_name" || return 1
   else
-    git -C "$original_root" worktree add -b "$branch_name" "$worktree_dir" "$base_branch" || return 1
+    _git_run git -C "$original_root" worktree add -b "$branch_name" "$worktree_dir" "$base_branch" || return 1
   fi
 
   _git_worktree_link_shared_files "$original_root" "$worktree_dir" || return 1
-  cd "$worktree_dir" || return 1
+  _git_run cd "$worktree_dir" || return 1
 }
 
 git-menu() {
