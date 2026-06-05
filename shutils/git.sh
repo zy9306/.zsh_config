@@ -7,14 +7,14 @@ _git_run() {
   "$@"
 }
 
-git-pull-main() {
+git-switch-and-pull-main() {
   emulate -L zsh
 
   local branch current_branch git_common_dir target_dir worktree_path worktree_branch line
 
   if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     cat <<'EOF'
-Usage: git-pull-main [git-pull-args...]
+Usage: git-switch-and-pull-main [git-pull-args...]
 
   Switch to main/master and pull latest code.
   When called from a linked worktree, cd back to the worktree that has
@@ -436,11 +436,11 @@ EOF
 
   while true; do
     if ! selected=$(
-      cat <<'EOF' | fzf --prompt='git> ' --height=40% --delimiter=$'\t' --with-nth=1,2
-pull-main	Switch to main/master and pull latest code
-push-current	Push the current branch to origin
-switch-branch	Switch local or remote branch
-worktree	Open, create, list, or remove worktrees
+      cat <<'EOF' | fzf --prompt='git> ' --height=40% --delimiter=$'\t' --with-nth=2,3 --tabstop=24
+switch-and-pull-main	switch-and-pull-main	Switch to main/master and pull latest code
+push-current	push-current	Push the current branch to origin
+switch-branch	switch-branch	Switch local or remote branch
+worktree	worktree	Open, create, list, or remove worktrees
 EOF
     ); then
       return 130
@@ -453,8 +453,8 @@ EOF
     action=${selected%%$'\t'*}
 
     case "$action" in
-      pull-main)
-        git-pull-main "$@"
+      switch-and-pull-main)
+        git-switch-and-pull-main "$@"
         return $?
         ;;
       push-current)
@@ -464,9 +464,9 @@ EOF
         fi
 
         if ! selected=$(
-          cat <<'EOF' | fzf --prompt='git push> ' --height=40% --delimiter=$'\t' --with-nth=1,2
-normal	Push current branch
-force	Force push current branch
+          cat <<'EOF' | fzf --prompt='git push> ' --height=40% --delimiter=$'\t' --with-nth=2,3 --tabstop=10
+normal	normal	Push current branch
+force	force	Force push current branch
 EOF
         ); then
           continue
@@ -495,9 +495,9 @@ EOF
 
         while true; do
           if ! selected=$(
-            cat <<'EOF' | fzf --prompt='git branch> ' --height=40% --delimiter=$'\t' --with-nth=1,2
-local	Switch local branch
-remote	Fetch and switch remote branch
+            cat <<'EOF' | fzf --prompt='git branch> ' --height=40% --delimiter=$'\t' --with-nth=2,3 --tabstop=10
+local	local	Switch local branch
+remote	remote	Fetch and switch remote branch
 EOF
           ); then
             break
@@ -535,12 +535,12 @@ EOF
 
         while true; do
           if ! selected=$(
-            cat <<'EOF' | fzf --prompt='git worktree> ' --height=40% --delimiter=$'\t' --with-nth=1,2
-pick	Pick an existing worktree branch
-create	Create or open branch worktree
-list	List worktree branches
-original	Jump to original worktree
-delete	Remove current linked worktree
+            cat <<'EOF' | fzf --prompt='git worktree> ' --height=40% --delimiter=$'\t' --with-nth=2,3 --tabstop=12
+pick	pick	Pick an existing worktree branch
+create	create	Create or open branch worktree
+list	list	List worktree branches
+original	original	Jump to original worktree
+delete	delete	Remove current linked worktree
 EOF
           ); then
             break
