@@ -415,19 +415,51 @@ git-menu() {
 
   local action base_branch branch_name command_status mode selected
 
-  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    cat <<'EOF'
-Usage: git-menu [args...]
+  case "$1" in
+    -h|--help|h|help)
+      cat <<'EOF'
+用法: git-menu [快捷命令] [参数...]
 
-  Pick a git task with fzf and run it.
-  When called with args, they are forwarded to the selected top-level helper.
-  Press Esc in a submenu to go back one level.
+  不带快捷命令时打开 fzf 菜单选择 git 操作。
+  在子菜单中按 Esc 返回上一级。
 
-Aliases:
+快捷命令:
+  gm h                           显示快捷命令帮助
+  gm m [git-pull-args...]        切到 main/master 并拉取最新代码
+  gm p [-f|--force]              推送当前分支到 origin
+  gm b [-r]                      切换本地分支；加 -r 时先 fetch 再切远端分支
+  gm w [git-worktree-args...]    打开、创建、列出或删除 worktree
+
+长命令名:
+  main, pull, push, branch, switch, worktree, wt
+  switch-and-pull-main, push-current, switch-branch
+
+别名:
   gm
 EOF
-    return 0
-  fi
+      return 0
+      ;;
+    m|main|pull|switch-and-pull-main)
+      shift
+      git-switch-and-pull-main "$@"
+      return $?
+      ;;
+    p|push|push-current)
+      shift
+      git-push-current "$@"
+      return $?
+      ;;
+    b|branch|switch|switch-branch)
+      shift
+      git-switch-branch "$@"
+      return $?
+      ;;
+    w|wt|worktree)
+      shift
+      git-worktree "$@"
+      return $?
+      ;;
+  esac
 
   if ! command_exists fzf; then
     echo_red_bold "fzf is not installed"
