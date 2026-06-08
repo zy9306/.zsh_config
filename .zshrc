@@ -95,3 +95,7 @@ _tmux_clear_stale_pane_is_vim() {
 
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _tmux_clear_stale_pane_is_vim
+
+
+# Added by Antigravity IDE
+export PATH="$HOME/.antigravity-ide/antigravity-ide/bin:$PATH"
