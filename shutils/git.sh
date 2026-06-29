@@ -7,6 +7,163 @@ _git_run() {
   "$@"
 }
 
+_git_repo_has_changes() {
+  local repo_dir
+
+  repo_dir=$1
+
+  ! git -C "$repo_dir" diff --quiet --ignore-submodules -- ||
+    ! git -C "$repo_dir" diff --cached --quiet --ignore-submodules -- ||
+    [ -n "$(git -C "$repo_dir" ls-files --others --exclude-standard)" ]
+}
+
+_git_pull_latest_repo() {
+  local repo_dir branch
+
+  repo_dir=$1
+
+  echo_cyan "==> $repo_dir"
+
+  if [ -z "$(git -C "$repo_dir" remote)" ]; then
+    echo_blue "Skipped: no git remote"
+    return 0
+  fi
+
+  branch=$(git -C "$repo_dir" symbolic-ref --quiet --short HEAD) || {
+    echo_red_bold "Skipped: detached HEAD"
+    return 1
+  }
+
+  if _git_repo_has_changes "$repo_dir"; then
+    _git_run git -C "$repo_dir" stash push -u -m "git-pull-recursive auto stash $(date '+%F %T')" || return 1
+  fi
+
+  if git -C "$repo_dir" rev-parse --verify --quiet '@{upstream}' >/dev/null 2>&1; then
+    _git_run git -C "$repo_dir" pull --ff-only || return 1
+  elif git -C "$repo_dir" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    _git_run git -C "$repo_dir" pull --ff-only origin "$branch" || return 1
+  else
+    echo_red_bold "No upstream or origin/$branch found"
+    return 1
+  fi
+}
+
+git-pull-recursive() {
+  emulate -L zsh
+
+  local root_dir depth find_depth root_dir_set git_marker repo_dir canonical_repo_dir failed total
+  local -a repo_dirs
+  local -A seen
+
+  root_dir=.
+  root_dir_set=0
+  depth=3
+  failed=0
+  total=0
+  repo_dirs=()
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -h|--help)
+        cat <<'EOF'
+Usage: git-pull-recursive [-d <depth>|--depth=<depth>] [directory]
+
+  Recursively find git repositories under directory and pull the latest
+  upstream branch for each repository.
+
+  If a repository has local changes, run `git stash push -u` before pulling.
+  The default recursion depth is 3.
+
+Options:
+  -d, --depth <depth>  Recursion depth, default 3
+  -h, --help           Show help
+
+Examples:
+  git-pull-recursive
+  git-pull-recursive ~/projects
+  git-pull-recursive -d 5 ~/projects
+EOF
+        return 0
+        ;;
+      -d|--depth)
+        if [ $# -lt 2 ]; then
+          echo_red_bold "Usage: git-pull-recursive [-d <depth>|--depth=<depth>] [directory]"
+          return 1
+        fi
+        depth=$2
+        shift 2
+        ;;
+      --depth=*)
+        depth=${1#--depth=}
+        shift
+        ;;
+      -*)
+        echo_red_bold "Unknown option: $1"
+        echo_red_bold "Usage: git-pull-recursive [-d <depth>|--depth=<depth>] [directory]"
+        return 1
+        ;;
+      *)
+        if [ "$root_dir_set" -eq 1 ]; then
+          echo_red_bold "Usage: git-pull-recursive [-d <depth>|--depth=<depth>] [directory]"
+          return 1
+        fi
+        root_dir=$1
+        root_dir_set=1
+        shift
+        ;;
+    esac
+  done
+
+  if [[ ! "$depth" = <-> ]]; then
+    echo_red_bold "Depth must be a non-negative integer: $depth"
+    return 1
+  fi
+
+  if [ ! -d "$root_dir" ]; then
+    echo_red_bold "Not a directory: $root_dir"
+    return 1
+  fi
+
+  root_dir=${root_dir:A}
+  find_depth=$((depth + 1))
+
+  while IFS= read -r git_marker; do
+    repo_dir=${git_marker:h}
+    canonical_repo_dir=${repo_dir:A}
+
+    if [ -n "${seen[$canonical_repo_dir]}" ]; then
+      continue
+    fi
+
+    if git -C "$canonical_repo_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      seen[$canonical_repo_dir]=1
+      repo_dirs+=("$canonical_repo_dir")
+    fi
+  done < <(
+    find "$root_dir" -maxdepth "$find_depth" -name .git \( \( -type d -prune \) -o -type f \) -print 2>/dev/null |
+      sort
+  )
+
+  if [ ${#repo_dirs[@]} -eq 0 ]; then
+    echo_red_bold "No git repositories found under: $root_dir"
+    return 1
+  fi
+
+  for repo_dir in "${repo_dirs[@]}"; do
+    total=$((total + 1))
+    if ! _git_pull_latest_repo "$repo_dir"; then
+      failed=$((failed + 1))
+    fi
+  done
+
+  if [ "$failed" -gt 0 ]; then
+    echo_red_bold "Done: $total repositories, $failed failed"
+    return 1
+  fi
+
+  echo_green "Done: $total repositories"
+}
+
 git-switch-and-pull-main() {
   emulate -L zsh
 
