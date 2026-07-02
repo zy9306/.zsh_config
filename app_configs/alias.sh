@@ -3,9 +3,7 @@ alias cx="codex"
 
 alias fd='fd --hidden --follow --no-ignore-vcs'
 
-alias y='yazi'
-
-function Y() {
+function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	command yazi "$@" --cwd-file="$tmp"
 	IFS= read -r -d '' cwd < "$tmp"
