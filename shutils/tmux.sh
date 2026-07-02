@@ -23,8 +23,6 @@ tn() {
   else
     echo "Creating tmux session '$title'"
     tmux new-session -d -s "$title" -c "$PWD"
-    tmux split-window -h -t "$title:" -c "$PWD"
-    tmux select-pane -t "$title:" -L
   fi
 
   if [ -n "$TMUX" ]; then
