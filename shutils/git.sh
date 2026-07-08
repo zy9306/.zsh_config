@@ -381,30 +381,23 @@ _git_worktree_link_shared_files() {
 }
 
 _git_worktree_prepare_base_branch() {
-  local original_root base_branch current_branch
+  local original_root base_branch
 
   original_root=$1
   base_branch=$2
 
-  current_branch=$(git -C "$original_root" branch --show-current 2>/dev/null)
-
-  if [ "$current_branch" != "$base_branch" ]; then
-    if git -C "$original_root" show-ref --verify --quiet "refs/heads/$base_branch"; then
-      _git_run git -C "$original_root" switch "$base_branch" || return 1
-    elif git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
-      _git_run git -C "$original_root" switch --track -c "$base_branch" "origin/$base_branch" || return 1
-    else
-      echo_red_bold "Base branch not found: $base_branch"
-      echo_red_bold "Use --base=<branch_name> to specify the base branch."
-      return 1
-    fi
+  if git -C "$original_root" remote get-url origin >/dev/null 2>&1; then
+    _git_run git -C "$original_root" fetch --prune origin || return 1
   fi
 
-  if git -C "$original_root" rev-parse --verify --quiet '@{upstream}' >/dev/null 2>&1; then
-    _git_run git -C "$original_root" pull --ff-only || return 1
-  elif git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
-    _git_run git -C "$original_root" pull --ff-only origin "$base_branch" || return 1
+  if git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch" ||
+    git -C "$original_root" show-ref --verify --quiet "refs/heads/$base_branch"; then
+    return 0
   fi
+
+  echo_red_bold "Base branch not found: $base_branch"
+  echo_red_bold "Use --base=<branch_name> to specify the base branch."
+  return 1
 }
 
 git-worktree() {
@@ -412,6 +405,7 @@ git-worktree() {
 
   local branch_name repo_root common_dir original_root repo_name repo_parent dir_branch_name worktree_parent worktree_dir legacy_worktree_dir confirm line
   local base_branch arg
+  local base_ref
   local -a args
 
   base_branch=master
@@ -557,10 +551,18 @@ EOF
 
   _git_worktree_prepare_base_branch "$original_root" "$base_branch" || return 1
 
-  if git show-ref --verify --quiet "refs/heads/$branch_name" || git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
-    _git_run git -C "$original_root" worktree add "$worktree_dir" "$branch_name" || return 1
+  if git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
+    base_ref="origin/$base_branch"
   else
-    _git_run git -C "$original_root" worktree add -b "$branch_name" "$worktree_dir" "$base_branch" || return 1
+    base_ref="$base_branch"
+  fi
+
+  if git -C "$original_root" show-ref --verify --quiet "refs/heads/$branch_name"; then
+    _git_run git -C "$original_root" worktree add "$worktree_dir" "$branch_name" || return 1
+  elif git -C "$original_root" show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+    _git_run git -C "$original_root" worktree add --track -b "$branch_name" "$worktree_dir" "origin/$branch_name" || return 1
+  else
+    _git_run git -C "$original_root" worktree add -b "$branch_name" "$worktree_dir" "$base_ref" || return 1
   fi
 
   _git_worktree_link_shared_files "$original_root" "$worktree_dir" || return 1
