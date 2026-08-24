@@ -3,11 +3,14 @@
 remove_local_ds_store() {
   case "$PWD/" in
   */.git | */.git/* | */node_modules | */node_modules/*)
-    return
+    return 0
     ;;
   esac
 
-  [[ -f "$PWD/.DS_Store" ]] && command rm -f -- "$PWD/.DS_Store"
+  [[ -w "$PWD" ]] || return 0
+  [[ -f "$PWD/.DS_Store" ]] && command rm -f -- "$PWD/.DS_Store" >/dev/null 2>&1
+
+  return 0
 }
 
 autoload -Uz add-zsh-hook

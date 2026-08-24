@@ -12,3 +12,5 @@ function y() {
 }
 
 alias st="stree"
+
+alias o="open ."
