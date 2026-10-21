@@ -8,4 +8,3 @@ source $APP_CONFIGS_DIR/editor.sh
 source $APP_CONFIGS_DIR/kubectl.sh
 source $APP_CONFIGS_DIR/sync.sh
 source $APP_CONFIGS_DIR/alias.sh
-source $APP_CONFIGS_DIR/ds_store.sh
