@@ -52,3 +52,6 @@ EOF
 
   print -r -- "${target:A}"
 }
+
+export SSD="/Volumes/ZHITAI500/"
+alias ssd="cd $SSD"
