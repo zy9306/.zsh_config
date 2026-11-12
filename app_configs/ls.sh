@@ -1,5 +1,5 @@
 if command_exists eza; then
-	alias ls="eza -h --group --group-directories-first --color=always --git --time-style long-iso --ignore-glob='.DS_Store'"
+	alias ls="eza -h --group --group-directories-first --color=always --git --time-style long-iso --ignore-glob='.DS_Store|._*'"
 fi
 
 alias ll='ls -al'
