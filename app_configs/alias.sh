@@ -15,3 +15,5 @@ alias st="stree"
 
 alias o="open ."
 alias pc="pbcopy"
+
+alias e="emacs"
