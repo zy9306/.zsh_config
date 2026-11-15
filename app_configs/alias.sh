@@ -17,3 +17,4 @@ alias o="open ."
 alias pc="pbcopy"
 
 alias e="emacs"
+alias es="$HOME/.emacs.d/scripts/emacs-session"
