@@ -1,4 +1,6 @@
-if command_exists nvim; then
+if command_exists emacs; then
+	export EDITOR=emacs
+elif command_exists nvim; then
 	export EDITOR=nvim
 	alias vim="nvim"
 	alias vi="nvim"
